@@ -1,0 +1,67 @@
+{
+    "title": "Realforce 87U: Numeric Keypad",
+    <%
+        remap_source_keys = [
+            "7","8","9","hyphen",
+            "u","i","o","open_bracket",
+            "j","k","l","semicolon","quote",
+            "m","period","slash"
+		]
+        remap_dest_keys = [
+            "keypad_7","keypad_8","keypad_9","keypad_hyphen",
+            "keypad_4","keypad_5","keypad_6","keypad_enter",
+            "keypad_1","keypad_2","keypad_3","keypad_plus","keypad_asterisk",
+            "keypad_0","keypad_period","keypad_slash"
+        ]
+        manipulators = each_key(
+            source_keys_list: remap_source_keys,
+            dest_keys_list: remap_dest_keys,
+            conditions: [{ "type"=>"variable_if", "name"=>"numeric_keypad_mode", "value"=>1 }]
+        )
+        manipulators_str = ""
+        manipulators.each do |m|
+            manipulators_str += ", #{JSON.generate(m)}"
+        end
+    %>
+    "rules": [
+        {
+            "description": "Realforce 87U: Numeric Keypad Mode [Tab as trigger key]",
+            "manipulators": [
+                <%# change Tab to Left_option + Fn if pressed with other keys %>
+                {
+                    "type": "basic",
+                    "from": <%= from("tab", [], []) %>,
+                    "to": [
+                        { "set_variable": { "name": "numeric_keypad_mode", "value": 1 } }
+                    ],
+                    "to_if_alone": <%= to([["tab"]]) %>,
+                    "to_after_key_up": [
+                        { "set_variable": { "name": "numeric_keypad_mode", "value": 0 } }
+                    ]
+                }
+                <%= manipulators_str %>,
+                {
+                    "type": "basic",
+                    "from": {
+                        "key_code": "comma"
+                    },
+                    "to": [
+                        {
+                            "key_code": "keypad_0"
+                        },
+                        {
+                            "key_code": "keypad_0"
+                        }
+                    ],
+                    "conditions": [
+                        {
+                            "type": "variable_if",
+                            "name": "numeric_keypad_mode",
+                            "value": 1
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
